@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
-var mongo = require('./mongoose.js');
+var db = require('./mariaConn');
+var app = require('../app');
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.send("hi");
@@ -14,33 +15,19 @@ var sign_up_post =function(req,res){
     res.send("plz input the id");
   }
   else{
-    var id = req.id;
-    var passwd = req.passwd;
-    var name = req.name;
-    var email = req.email;
-      //mongo.makeUser(id,passwd,name,email); //여기에서 에러남 !! mongo.makeUser is not a function 에러!!
-      //var signMember = mongo.Member;
-      mongo.Member.findOne({id: id}, function (err, member) {
-          if (err) return handleError(Err);
+    var myid = req.id;
+    var mypasswd = app.hash(req.passwd);
+    var myname = req.name;
+    var myemail = req.email;
 
-          if (member == null) {
-              var myMember = new mongo.Member({id: id, password: passwd, email: email, name: name});
-              myMember.save(function (err, data) {
-                  if (err) {
-                      console.log(err);
-                  }
-                  else {
-                      console.log('member is inserted');
-                  }
-              });
-          }
-          else {
-              console.log("id existing");
-          }
-      });
+
+     db.pool.query('insert into member values(:id, :passwd, :name, :email)',{id:myid,passwd:mypasswd,name:myname,email:myemail},function(err,results){
+         console.log(err);
+         console.log(results);	// 조회 결과
+     });
   }
-
-  res.send(req.id)
+    //성공
+  res.redirect('/');
 }
 
 router.post('/',function(req,res,next) {
